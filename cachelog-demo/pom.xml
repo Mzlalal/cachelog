@@ -19,6 +19,13 @@
 	</properties>
 
 	<dependencies>
+		<!-- fast json -->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+            <version>1.2.60</version>
+            <optional>true</optional>
+		</dependency>
 		<dependency>
 			<groupId>cn.mzlalal.cache-log</groupId>
 			<artifactId>cachelog-core-starter</artifactId>
@@ -35,7 +42,7 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

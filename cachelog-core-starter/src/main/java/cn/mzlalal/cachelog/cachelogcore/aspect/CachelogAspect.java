@@ -3,12 +3,14 @@ package cn.mzlalal.cachelog.cachelogcore.aspect;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog;
+import org.springframework.stereotype.Component;
 
 /**
  * @description: 默认切面
@@ -17,6 +19,8 @@ import cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog;
  * @version: 1.0
  */
 @Slf4j
+@Aspect
+@Component
 public class CachelogAspect {
     @Autowired
     private RedisTemplate redisTemplate;
@@ -54,6 +58,6 @@ public class CachelogAspect {
         if (log.isDebugEnabled()) {
             log.debug("方法:{} 总耗时:{}", methodName, (endTime - startTime));
         }
-        return null;
+        return returnValue;
     }
 }
