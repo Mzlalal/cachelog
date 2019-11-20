@@ -1,11 +1,14 @@
 package cn.mzlalal.cachelog.cachelogcore.config;
 
 import cn.mzlalal.cachelog.cachelogcore.aspect.CachelogAspect;
+import cn.mzlalal.cachelog.cachelogcore.config.properties.CachelogProperties;
+import cn.mzlalal.cachelog.cachelogcore.config.serializer.FastJson2JsonRedisSerializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -20,6 +23,8 @@ import java.nio.charset.Charset;
  */
 @Slf4j
 @Configuration
+// 加载这个类
+@EnableConfigurationProperties(CachelogProperties.class)
 public class CachelogBaseRedisConfig {
 
     /**
