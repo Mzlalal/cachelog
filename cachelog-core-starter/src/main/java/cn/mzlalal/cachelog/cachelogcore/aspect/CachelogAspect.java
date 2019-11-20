@@ -26,10 +26,16 @@ public class CachelogAspect {
     /**
      * 定义切入点 切入点为带有@Cachelog的注解
      */
-    @Pointcut(value = "@annotation(cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog)")
+    @Pointcut(value = "@within(cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog)")
     public void pointCut() {}
 
-    @Around("pointCut() && @annotation(cachelog)")
+    /**
+     * 环绕通知
+     * @param pjp 切入点
+     * @param cachelog 注解内容
+     * @return
+     */
+    @Around("pointCut() && @within(cachelog)")
     public Object doAround(ProceedingJoinPoint pjp, Cachelog cachelog) {
         // 开始时间
         long startTime = System.currentTimeMillis();
@@ -42,19 +48,22 @@ public class CachelogAspect {
             returnValue = pjp.proceed();
         } catch (Throwable throwable) {
             log.error("", throwable);
+            return returnValue;
+        } finally {
+            // 结束时间
+            long endTime = System.currentTimeMillis();
+            if (log.isDebugEnabled()) {
+                log.debug("方法:{} 总耗时:{}", methodName, (endTime - startTime));
+            }
         }
-        // 结束时间
-        long endTime = System.currentTimeMillis();
-        // 判断是否存储到redis
+
+        // 判断是否存储到redis 使用hash  类名分组 方法名称为key 返回值为value
         if (cachelog.isRedis()) {
             redisTemplate.opsForHash().put(pjp.getTarget().getClass().toString(), methodName, returnValue);
         }
         // 判断是否记录日志
         if (cachelog.isLog()) {
             log.info("方法:{}执行结束!结果为:{}", methodName, returnValue);
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("方法:{} 总耗时:{}", methodName, (endTime - startTime));
         }
         return returnValue;
     }
