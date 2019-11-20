@@ -3,6 +3,7 @@ package cn.mzlalal.cachelog.cachelogcore.aspect;
 import cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog;
 import cn.mzlalal.cachelog.cachelogcore.config.properties.CachelogProperties;
 import cn.mzlalal.cachelog.cachelogcore.entity.CacheLog;
+import cn.mzlalal.cachelog.cachelogcore.entity.enums.MethodHead;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -50,7 +51,7 @@ public class CachelogAspect {
     @Around("pointCut() && @within(annotation)")
     public Object doAround(ProceedingJoinPoint pjp, Cachelog annotation) {
         // 获取请求对象
-        HttpServletRequest request = getRequest();
+        HttpServletRequest request = this.getRequest();
         // 实例化对象
         CacheLog cacheLog = new CacheLog();
         // 设置方法开始时间
@@ -65,6 +66,8 @@ public class CachelogAspect {
         cacheLog.setClassName(pjp.getTarget().getClass().toString());
         // 获取签名方法名称
         cacheLog.setMethodName(((MethodSignature) (pjp.getSignature())).getMethod().getName());
+        // 获取方法操作类型
+        cacheLog.setOperationType(this.getOperationType(cacheLog.getMethodName()));
         // 获取请求参数
         cacheLog.setRequestParameter(JSON.toJSONString(pjp.getArgs()));
 
@@ -95,7 +98,7 @@ public class CachelogAspect {
         }
         // 判断是否记录日志
         if (annotation.isLog()) {
-            printLog(cacheLog);
+            this.printLog(cacheLog);
         }
         return returnValue;
     }
@@ -128,6 +131,26 @@ public class CachelogAspect {
                 // todo 待完善自定义类路径以及方法名输出日志对象
                 break;
         }
+    }
 
+    /**
+     * 根据方法名称返回操作类型 参考遵守 alibaba 命名规范
+     * 若不存在以下命名 则返回操作类型为 未知
+     --1） 获取单个对象的方法用 get 做前缀。
+     --2） 获取多个对象的方法用 list 做前缀。
+     --3） 获取统计值的方法用 count 做前缀。
+     --4） 插入的方法用 save（推荐）或 insert 做前缀。
+     --5） 删除的方法用 remove（推荐）或 delete 做前缀。
+     --6） 修改的方法用 update 做前缀。
+     * @param methodName 方法名称
+     * @return string 若未查询到返回 未知
+     */
+    private String getOperationType (String methodName) {
+        for (MethodHead temp : MethodHead.values()) {
+            if (methodName.startsWith(temp.getHead())) {
+                return temp.getType();
+            }
+        }
+        return "未知";
     }
 }

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiController {
 
     @RequestMapping("testAnnotation")
-    public Results test () {
+    public Results find () {
         return Results.OK("测试");
     }
 

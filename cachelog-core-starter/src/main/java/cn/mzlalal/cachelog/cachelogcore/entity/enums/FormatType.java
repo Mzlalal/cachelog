@@ -1,4 +1,4 @@
-package cn.mzlalal.cachelog.cachelogcore.entity;
+package cn.mzlalal.cachelog.cachelogcore.entity.enums;
 
 /**
  * @description: 日志实体类打印格式

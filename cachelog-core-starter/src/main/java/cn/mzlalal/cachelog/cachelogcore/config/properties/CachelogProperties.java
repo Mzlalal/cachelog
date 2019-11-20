@@ -1,6 +1,6 @@
 package cn.mzlalal.cachelog.cachelogcore.config.properties;
 
-import cn.mzlalal.cachelog.cachelogcore.entity.FormatType;
+import cn.mzlalal.cachelog.cachelogcore.entity.enums.FormatType;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
