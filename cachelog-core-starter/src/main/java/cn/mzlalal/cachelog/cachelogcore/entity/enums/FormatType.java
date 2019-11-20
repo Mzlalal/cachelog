@@ -15,7 +15,7 @@ public enum FormatType {
     /**
      * 通过 org.apache.commons.lang3.builder.ReflectionToStringBuilder 将实体转换成string
      */
-    REFLECTIONTOSTRINGBUILDER,
+    STRINGBUILDER,
 
     /**
      * 自定义 通过类名和方法名进行反射调用
