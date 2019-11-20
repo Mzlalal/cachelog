@@ -20,11 +20,11 @@ import java.nio.charset.Charset;
  */
 @Slf4j
 @Configuration
-public class BaseRedisConfig {
-
+public class CachelogBaseRedisConfig {
 
     /**
      * 实例化 CachelogAspect 对象
+     * 如果不实例化 则切面无效
      * @return
      */
     @Bean

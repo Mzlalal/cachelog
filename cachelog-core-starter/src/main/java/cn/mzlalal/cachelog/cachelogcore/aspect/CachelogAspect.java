@@ -1,5 +1,6 @@
 package cn.mzlalal.cachelog.cachelogcore.aspect;
 
+import cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -9,18 +10,15 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog;
-import org.springframework.stereotype.Component;
-
 /**
  * @description: 默认切面
+ * 可以更换切面 查看cachelog-demo中的 baseRedisConfig 以及CachelogAspect_Test
  * @author: Mzlalal
  * @date: 2019/11/19 16:52
  * @version: 1.0
  */
 @Slf4j
 @Aspect
-@Component
 public class CachelogAspect {
     @Autowired
     private RedisTemplate redisTemplate;

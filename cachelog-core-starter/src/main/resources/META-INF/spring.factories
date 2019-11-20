@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-cn.mzlalal.cachelog.cachelogcore.config.BaseRedisConfig
+cn.mzlalal.cachelog.cachelogcore.config.CachelogBaseRedisConfig
