@@ -1,6 +1,9 @@
 package cn.mzlalal.cachelog.cachelogcore.annotaion;
 
+import cn.mzlalal.cachelog.cachelogcore.entity.enums.ExpiredPolicyEnums;
+
 import java.lang.annotation.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @description: cache log注解
@@ -16,14 +19,24 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Cachelog {
     /**
-     * 是否保存到redis
-     * @return
-     */
-    boolean isRedis() default false;
-
-    /**
      * 是否记录日志
-     * @return
      */
     boolean isLog() default true;
+    /**
+     * 是否保存到redis
+     */
+    boolean isRedis() default false;
+    /**
+     * 过期策略
+     * @return ExpiredTime
+     */
+    ExpiredPolicyEnums policy() default ExpiredPolicyEnums.DEFAULT;
+    /**
+     * 过期时间
+     */
+    long time() default 300;
+    /**
+     * 时间单位
+     */
+    TimeUnit unit() default TimeUnit.SECONDS;
 }

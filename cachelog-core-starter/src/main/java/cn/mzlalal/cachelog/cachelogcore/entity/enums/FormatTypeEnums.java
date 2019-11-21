@@ -6,7 +6,7 @@ package cn.mzlalal.cachelog.cachelogcore.entity.enums;
  * @date: 2019/11/20 13:26
  * @version: 1.0
  */
-public enum FormatType {
+public enum FormatTypeEnums {
     /**
      * 通过 alibaba fastjson 将实体转换成string
      */

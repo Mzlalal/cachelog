@@ -3,10 +3,12 @@ package cn.mzlalal.cachelog.cachelogcore.aspect;
 import cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog;
 import cn.mzlalal.cachelog.cachelogcore.config.properties.CachelogProperties;
 import cn.mzlalal.cachelog.cachelogcore.entity.CacheLog;
-import cn.mzlalal.cachelog.cachelogcore.entity.enums.MethodHead;
+import cn.mzlalal.cachelog.cachelogcore.entity.enums.ExpiredPolicyEnums;
+import cn.mzlalal.cachelog.cachelogcore.entity.enums.MethodHeadEnums;
 import cn.mzlalal.cachelog.cachelogcore.interfaces.CacheLogFormatTypeInterface;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -76,11 +78,20 @@ public class CachelogAspect {
         cacheLog.setOperationType(this.getOperationType(cacheLog.getMethodName()));
         // 获取请求参数
         cacheLog.setRequestParameter(JSON.toJSONString(pjp.getArgs()));
-
+        Class clazz = ((MethodSignature) (pjp.getSignature())).getMethod().getReturnType();
         // 返回值
         Object returnValue = null;
+
         try {
-            returnValue = pjp.proceed();
+            // 获取缓存
+            Object temp = redisTemplate.opsForValue().get(cacheLog.getMethodName());
+            // 若缓存为空则执行方法
+            if (temp == null) {
+                returnValue = pjp.proceed();
+            } else {
+                // 将返回类型反序列化
+                returnValue = JSON.parseObject(temp.toString(),clazz);
+            }
         } catch (Throwable throwable) {
             log.error("", throwable);
             return returnValue;
@@ -96,11 +107,18 @@ public class CachelogAspect {
             }
         }
 
-        // 判断是否存储到redis 使用hash  类名分组 方法名称为key 返回值为value
-        if (annotation.isRedis()) {
-            redisTemplate.opsForHash().put(cacheLog.getClassName(),
-                    cacheLog.getMethodName(),
-                    returnValue);
+        // 判断是否存储到redis 使用字符串String 方法名称为key 返回值为value
+        // 如果使用注解 并且策略为永不过期 则不设置过期时间
+        if (annotation.isRedis() && annotation.policy().equals(ExpiredPolicyEnums.NERVER)) {
+            // 直接存储值 不设置过期时间
+            redisTemplate.opsForValue().set(cacheLog.getMethodName(),
+                    cacheLog.getReturnValue());
+        } else {
+            // 通过getExpiredTime设置过期时间
+            redisTemplate.opsForValue().set(cacheLog.getMethodName(),
+                    cacheLog.getReturnValue(),
+                    this.getExpiredTime(annotation),
+                    annotation.unit());
         }
         // 判断是否记录日志
         if (annotation.isLog()) {
@@ -124,10 +142,11 @@ public class CachelogAspect {
 
     /**
      * 打印日志
+     *
      * @param cacheLog
      */
     private void printLog(CacheLog cacheLog) {
-        switch (cachelogProperties.getFormatType()) {
+        switch (cachelogProperties.getFormatTypeEnums()) {
             case FASTJSON:
                 log.info(JSON.toJSONStringWithDateFormat(cacheLog, "yyyy-MM-dd hh:mm:ss"));
                 break;
@@ -176,11 +195,27 @@ public class CachelogAspect {
      * @return string 若未查询到返回 未知
      */
     private String getOperationType(String methodName) {
-        for (MethodHead temp : MethodHead.values()) {
+        for (MethodHeadEnums temp : MethodHeadEnums.values()) {
             if (methodName.startsWith(temp.getHead())) {
                 return temp.getType();
             }
         }
         return "未知";
+    }
+
+    /**
+     * 获取过期时间
+     * @param annotation 注解
+     * @return long 过期时间
+     */
+    private long getExpiredTime(Cachelog annotation) {
+        switch (annotation.policy()) {
+            case DEFAULT:
+                return annotation.time();
+            case RANDOM:
+                return RandomUtils.nextLong(300, 3000);
+            default:
+                return annotation.time();
+        }
     }
 }

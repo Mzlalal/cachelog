@@ -1,11 +1,13 @@
 package cn.mzlalal.cachelog.cachelogdemo;
 
-import cn.mzlalal.cachelog.cachelogcore.entity.enums.MethodHead;
+import cn.mzlalal.cachelog.cachelogcore.entity.enums.MethodHeadEnums;
 import cn.mzlalal.cachelog.cachelogcore.interfaces.CacheLogFormatTypeInterface;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
+
+import java.util.Arrays;
 
 @Slf4j
 @SpringBootTest
@@ -17,7 +19,7 @@ public class CachelogDemoApplicationTests {
 
 	@Test
 	public void enums () {
-		for (MethodHead temp : MethodHead.values()) {
+		for (MethodHeadEnums temp : MethodHeadEnums.values()) {
 			System.out.println(temp.getHead() + temp.getType());
 		}
 	}
@@ -32,6 +34,17 @@ public class CachelogDemoApplicationTests {
 		} catch (Exception e) {
 			log.error("", e);
 		}
+	}
 
+	@Test
+	public void arrs () {
+		String test1="test1,test2,test3";
+		String test2="test1,test3,test2";
+		// 开始第二步详细对比
+		String[] fieldNameArr = test1.split(",");
+		String[] fieldNameMetaSetArr = test2.split(",");
+		Arrays.sort(fieldNameArr);
+		Arrays.sort(fieldNameMetaSetArr);
+		System.out.println(Arrays.equals(fieldNameArr, fieldNameMetaSetArr));
 	}
 }

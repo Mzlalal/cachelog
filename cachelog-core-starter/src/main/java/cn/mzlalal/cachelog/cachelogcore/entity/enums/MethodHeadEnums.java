@@ -6,7 +6,7 @@ package cn.mzlalal.cachelog.cachelogcore.entity.enums;
  * @date: 2019/11/20 14:31
  * @version: 1.0
  */
-public enum MethodHead {
+public enum MethodHeadEnums {
     /**
      * get查询单个
      */
@@ -52,7 +52,7 @@ public enum MethodHead {
      */
     private String type;
 
-    MethodHead(String head, String type) {
+    MethodHeadEnums(String head, String type) {
         this.head = head;
         this.type = type;
     }
