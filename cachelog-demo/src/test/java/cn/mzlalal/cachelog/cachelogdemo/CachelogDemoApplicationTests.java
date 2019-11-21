@@ -1,8 +1,10 @@
 package cn.mzlalal.cachelog.cachelogdemo;
 
+import cn.mzlalal.cachelog.cachelogcore.entity.enums.ExpiredPolicyEnums;
 import cn.mzlalal.cachelog.cachelogcore.entity.enums.MethodHeadEnums;
 import cn.mzlalal.cachelog.cachelogcore.interfaces.CacheLogFormatTypeInterface;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
@@ -46,5 +48,12 @@ public class CachelogDemoApplicationTests {
 		Arrays.sort(fieldNameArr);
 		Arrays.sort(fieldNameMetaSetArr);
 		System.out.println(Arrays.equals(fieldNameArr, fieldNameMetaSetArr));
+	}
+
+	@Test
+	public void stringEq() {
+		String a = ExpiredPolicyEnums.DEFAULT.toString();
+		String b = ExpiredPolicyEnums.DEFAULT.toString();
+		System.out.println(StringUtils.equals(a, b));
 	}
 }

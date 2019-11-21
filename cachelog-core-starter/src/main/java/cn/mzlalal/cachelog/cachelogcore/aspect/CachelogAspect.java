@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Date;
+import java.util.Objects;
 
 
 /**
@@ -51,7 +52,6 @@ public class CachelogAspect {
 
     /**
      * 环绕通知
-     *
      * @param pjp        切入点
      * @param annotation 注解内容
      * @return
@@ -70,15 +70,15 @@ public class CachelogAspect {
             cacheLog.setRemoteIP(request.getRemoteAddr());
         }
 
+        Method method = ((MethodSignature) (pjp.getSignature())).getMethod();
         // 获取类名
         cacheLog.setClassName(pjp.getTarget().getClass().toString());
         // 获取签名方法名称
-        cacheLog.setMethodName(((MethodSignature) (pjp.getSignature())).getMethod().getName());
+        cacheLog.setMethodName(method.getName());
         // 获取方法操作类型
         cacheLog.setOperationType(this.getOperationType(cacheLog.getMethodName()));
         // 获取请求参数
         cacheLog.setRequestParameter(JSON.toJSONString(pjp.getArgs()));
-        Class clazz = ((MethodSignature) (pjp.getSignature())).getMethod().getReturnType();
         // 返回值
         Object returnValue = null;
 
@@ -86,11 +86,13 @@ public class CachelogAspect {
             // 获取缓存
             Object temp = redisTemplate.opsForValue().get(cacheLog.getMethodName());
             // 若缓存为空则执行方法
-            if (temp == null) {
+            if (Objects.isNull(temp)) {
                 returnValue = pjp.proceed();
             } else {
+                // 获取返回对象类型
+                Class clazz = method.getReturnType();
                 // 将返回类型反序列化
-                returnValue = JSON.parseObject(temp.toString(),clazz);
+                returnValue = JSON.parseObject(temp.toString(), clazz);
             }
         } catch (Throwable throwable) {
             log.error("", throwable);
@@ -99,17 +101,16 @@ public class CachelogAspect {
             // 结束时间
             cacheLog.setEndTimestamp(new Date());
             // 总耗时
-            cacheLog.setTotalTime(cacheLog.getEndTimestamp().getTime() - cacheLog.getStartTimestamp().getTime());
+            cacheLog.setTotalConsumerTime(cacheLog.getEndTimestamp().getTime() - cacheLog.getStartTimestamp().getTime());
             // 返回结果
             cacheLog.setReturnValue(JSON.toJSONString(returnValue));
             if (log.isDebugEnabled()) {
-                log.debug("方法:{} 总耗时:{}", cacheLog.getMethodName(), cacheLog.getTotalTime());
+                log.debug("方法:{} 总耗时:{}", cacheLog.getMethodName(), cacheLog.getTotalConsumerTime());
             }
         }
-
         // 判断是否存储到redis 使用字符串String 方法名称为key 返回值为value
         // 如果使用注解 并且策略为永不过期 则不设置过期时间
-        if (annotation.isRedis() && annotation.policy().equals(ExpiredPolicyEnums.NERVER)) {
+        if (annotation.isRedis() && (ExpiredPolicyEnums.NERVER).equals(annotation.policy())) {
             // 直接存储值 不设置过期时间
             redisTemplate.opsForValue().set(cacheLog.getMethodName(),
                     cacheLog.getReturnValue());
@@ -129,7 +130,6 @@ public class CachelogAspect {
 
     /**
      * 获取 request 对象
-     *
      * @return
      */
     private HttpServletRequest getRequest() {
@@ -142,7 +142,6 @@ public class CachelogAspect {
 
     /**
      * 打印日志
-     *
      * @param cacheLog
      */
     private void printLog(CacheLog cacheLog) {
@@ -205,6 +204,7 @@ public class CachelogAspect {
 
     /**
      * 获取过期时间
+     *
      * @param annotation 注解
      * @return long 过期时间
      */
