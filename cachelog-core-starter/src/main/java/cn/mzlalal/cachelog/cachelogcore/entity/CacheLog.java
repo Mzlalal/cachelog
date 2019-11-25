@@ -39,7 +39,7 @@ public class CacheLog {
     /**
      * 总耗时(ms)
      */
-    private long totalTime;
+    private long totalConsumerTime;
     /**
      * 开始时间
      */
@@ -58,7 +58,7 @@ public class CacheLog {
                 ", remoteIP='" + remoteIP + '\'' +
                 ", requestParameter='" + requestParameter + '\'' +
                 ", returnValue='" + returnValue + '\'' +
-                ", totalTime=" + totalTime +
+                ", totalConsumerTime=" + totalConsumerTime +
                 ", startTimestamp=" + startTimestamp.toLocaleString() +
                 ", endTimestamp=" + startTimestamp.toLocaleString() +
                 '}';
