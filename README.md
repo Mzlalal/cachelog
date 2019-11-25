@@ -5,7 +5,7 @@
 2. 添加在方法上，可单独在方法上添加注解自定义该方法操作。
 ***
 ### 自定义注解为@Cachelog
-```
+``` java
 
     /**
      * 是否记录日志
@@ -32,7 +32,7 @@
 ***
 ### 过期策略详解
 过期策略主要如下：
-```
+``` java
 
     /**
      * 从不过期
@@ -51,7 +51,7 @@
 日志打印主要有FASTJSON, STRINGBUILDER, 以及CUSTOMIZATION自定义
 ***
 通过自定义需要实现CacheLogFormatTypeInterface接口
-```
+``` java
 
     /**
      * 通过 alibaba fastjson 将实体转换成string
