@@ -44,35 +44,50 @@ public class CachelogAspect {
     CachelogProperties cachelogProperties;
 
     /**
-     * 定义切入点 切入点为带有@Cachelog的注解
+     * 定义切入点 切入点 类Class 为带有@Cachelog的注解
      */
     @Pointcut(value = "@within(cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog)")
-    public void pointCut() {
-    }
+    public void classPointCut() {}
+
+    /**
+     * 定义切入点 切入点 方法Method 为带有@Cachelog的注解
+     */
+    @Pointcut(value = "@annotation(cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog)")
+    public void methodPointCut() {}
 
     /**
      * 环绕通知
-     * @param pjp        切入点
-     * @param annotation 注解内容
+     * @param pjp 切入点
      * @return
      */
-    @Around("pointCut() && @within(annotation)")
-    public Object doAround(ProceedingJoinPoint pjp, Cachelog annotation) {
+    @Around("classPointCut() || methodPointCut()")
+    public Object doAround(ProceedingJoinPoint pjp) {
+        // 声明注解对象
+        Cachelog annotation = null;
+        // 获取目标类
+        Class clazz = pjp.getTarget().getClass();
         // 获取请求对象
         HttpServletRequest request = this.getRequest();
         // 实例化对象
         CacheLog cacheLog = new CacheLog();
         // 设置方法开始时间
         cacheLog.setStartTimestamp(new Date());
-
         // 获取调用方IP
         if (request != null) {
             cacheLog.setRemoteIP(request.getRemoteAddr());
         }
-
+        // 获取方法
         Method method = ((MethodSignature) (pjp.getSignature())).getMethod();
+        // 获取方法注解信息
+        annotation = method.getAnnotation(Cachelog.class);
+        // 如果从方法上获取注解位空 则获取类上面的注解
+        if (Objects.isNull(annotation)) {
+            // 从目标类上获取注解
+            annotation = pjp.getTarget().getClass().getAnnotation(Cachelog.class);
+            Assert.notNull(annotation, "注解对象Cachelog不能为空!");
+        }
         // 获取类名
-        cacheLog.setClassName(pjp.getTarget().getClass().toString());
+        cacheLog.setClassName(clazz.toString());
         // 获取签名方法名称
         cacheLog.setMethodName(method.getName());
         // 获取方法操作类型
@@ -81,7 +96,8 @@ public class CachelogAspect {
         cacheLog.setRequestParameter(JSON.toJSONString(pjp.getArgs()));
         // 返回值
         Object returnValue = null;
-
+        // 键名称
+        String keyName = clazz.getName() + cacheLog.getMethodName();
         try {
             // 获取缓存
             Object temp = redisTemplate.opsForValue().get(cacheLog.getMethodName());
@@ -90,9 +106,18 @@ public class CachelogAspect {
                 returnValue = pjp.proceed();
             } else {
                 // 获取返回对象类型
-                Class clazz = method.getReturnType();
+                Class returnClazz = method.getReturnType();
                 // 将返回类型反序列化
-                returnValue = JSON.parseObject(temp.toString(), clazz);
+                try {
+                    returnValue = JSON.parseObject(temp.toString(), returnClazz);
+                } catch (Exception e) {
+                    log.error("", e);
+                    // 删除redis键
+                    redisTemplate.delete(keyName);
+                } finally {
+                    // 进行重试
+                    returnValue = pjp.proceed();
+                }
             }
         } catch (Throwable throwable) {
             log.error("", throwable);
@@ -108,15 +133,15 @@ public class CachelogAspect {
                 log.debug("方法:{} 总耗时:{}", cacheLog.getMethodName(), cacheLog.getTotalConsumerTime());
             }
         }
-        // 判断是否存储到redis 使用字符串String 方法名称为key 返回值为value
+        // 判断是否存储到redis 使用字符串String 类名方法名称为key 返回值为value
         // 如果使用注解 并且策略为永不过期 则不设置过期时间
         if (annotation.isRedis() && (ExpiredPolicyEnums.NERVER).equals(annotation.policy())) {
             // 直接存储值 不设置过期时间
-            redisTemplate.opsForValue().set(cacheLog.getMethodName(),
+            redisTemplate.opsForValue().set(keyName,
                     cacheLog.getReturnValue());
-        } else {
+        } else if (annotation.isRedis()) {
             // 通过getExpiredTime设置过期时间
-            redisTemplate.opsForValue().set(cacheLog.getMethodName(),
+            redisTemplate.opsForValue().set(keyName,
                     cacheLog.getReturnValue(),
                     this.getExpiredTime(annotation),
                     annotation.unit());
@@ -130,6 +155,7 @@ public class CachelogAspect {
 
     /**
      * 获取 request 对象
+     *
      * @return
      */
     private HttpServletRequest getRequest() {
@@ -142,6 +168,7 @@ public class CachelogAspect {
 
     /**
      * 打印日志
+     *
      * @param cacheLog
      */
     private void printLog(CacheLog cacheLog) {

@@ -16,9 +16,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("test")
 public class ApiController {
 
+    /**
+     * 不会记录日志
+     * @return
+     */
     @RequestMapping("testAnnotation")
+    @Cachelog(isLog = false)
     public Results find () {
         return Results.OK("测试");
     }
 
+
+    /**
+     * 这个不会保存到redis
+     * @return
+     */
+    @RequestMapping("testAnnotation2")
+    @Cachelog
+    public Results save () {
+        return Results.OK("新增");
+    }
 }
