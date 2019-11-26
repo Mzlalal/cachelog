@@ -82,3 +82,13 @@ cn.mzlalal.cachelog.cachelogcore.entity.CacheLog@3787f096[operationType=查询,c
 2. 覆盖 doAround 方法
 3. 在 config 中继承 CachelogRedisConfig
 4. 在 config 中实例化 CachelogAspect_Test 切面
+
+附录:
+<br/>* 根据方法名称返回操作类型 参考遵守 alibaba 命名规范
+<br/>* 若不存在以下命名 则返回操作类型为 未知
+<br/>* --1） 获取单个对象的方法用 get 做前缀。
+<br/>* --2） 获取多个对象的方法用 list 做前缀。
+<br/>* --3） 获取统计值的方法用 count 做前缀。
+<br/>* --4） 插入的方法用 save（推荐）或 insert 做前缀。
+<br/>* --5） 删除的方法用 remove（推荐）或 delete 做前缀。
+<br/>* --6） 修改的方法用 update 做前缀。

@@ -47,16 +47,19 @@ public class CachelogAspect {
      * 定义切入点 切入点 类Class 为带有@Cachelog的注解
      */
     @Pointcut(value = "@within(cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog)")
-    public void classPointCut() {}
+    public void classPointCut() {
+    }
 
     /**
      * 定义切入点 切入点 方法Method 为带有@Cachelog的注解
      */
     @Pointcut(value = "@annotation(cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog)")
-    public void methodPointCut() {}
+    public void methodPointCut() {
+    }
 
     /**
      * 环绕通知
+     *
      * @param pjp 切入点
      * @return
      */
@@ -66,8 +69,15 @@ public class CachelogAspect {
         Cachelog annotation = null;
         // 获取目标类
         Class clazz = pjp.getTarget().getClass();
+        // 获取方法
+        Method method = ((MethodSignature) (pjp.getSignature())).getMethod();
+        // 获取返回对象类型
+        Class returnClazz = method.getReturnType();
         // 获取请求对象
         HttpServletRequest request = this.getRequest();
+        // 获取方法参数
+        String args = JSON.toJSONString(request.getParameterMap());
+
         // 实例化对象
         CacheLog cacheLog = new CacheLog();
         // 设置方法开始时间
@@ -76,8 +86,6 @@ public class CachelogAspect {
         if (request != null) {
             cacheLog.setRemoteIP(request.getRemoteAddr());
         }
-        // 获取方法
-        Method method = ((MethodSignature) (pjp.getSignature())).getMethod();
         // 获取方法注解信息
         annotation = method.getAnnotation(Cachelog.class);
         // 如果从方法上获取注解位空 则获取类上面的注解
@@ -93,20 +101,18 @@ public class CachelogAspect {
         // 获取方法操作类型
         cacheLog.setOperationType(this.getOperationType(cacheLog.getMethodName()));
         // 获取请求参数
-        cacheLog.setRequestParameter(JSON.toJSONString(pjp.getArgs()));
+        cacheLog.setRequestParameter(args);
         // 返回值
         Object returnValue = null;
-        // 键名称
-        String keyName = clazz.getName() + cacheLog.getMethodName();
+        // 键名称 方法名加参数
+        String keyName = cacheLog.getMethodName() + args;
         try {
             // 获取缓存
-            Object temp = redisTemplate.opsForValue().get(cacheLog.getMethodName());
+            Object temp = redisTemplate.opsForValue().get(keyName);
             // 若缓存为空则执行方法
             if (Objects.isNull(temp)) {
                 returnValue = pjp.proceed();
             } else {
-                // 获取返回对象类型
-                Class returnClazz = method.getReturnType();
                 // 将返回类型反序列化
                 try {
                     returnValue = JSON.parseObject(temp.toString(), returnClazz);
@@ -114,12 +120,12 @@ public class CachelogAspect {
                     log.error("", e);
                     // 删除redis键
                     redisTemplate.delete(keyName);
-                } finally {
                     // 进行重试
                     returnValue = pjp.proceed();
                 }
             }
         } catch (Throwable throwable) {
+            // 记录错误信息
             log.error("", throwable);
             return returnValue;
         } finally {
@@ -186,8 +192,11 @@ public class CachelogAspect {
                 try {
                     // 根据指定的类路径查询
                     Class clazz = Class.forName(cachelogProperties.getClassPath());
+                    // 实例化指定的类
                     Object instanceObj = clazz.newInstance();
+                    // 判断是否是CacheLogFormatTypeInterface的实现类
                     Assert.isInstanceOf(CacheLogFormatTypeInterface.class, instanceObj, "该类未实现CacheLogFormatTypeInterface接口!");
+                    // 获取方法 并遍历找到 methodName去执行
                     Method[] methods = clazz.getDeclaredMethods();
                     for (Method temp : methods) {
                         if (temp.getName().equals(cachelogProperties.getMethodName())) {
