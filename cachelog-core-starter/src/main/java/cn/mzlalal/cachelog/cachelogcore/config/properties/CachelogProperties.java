@@ -3,6 +3,7 @@ package cn.mzlalal.cachelog.cachelogcore.config.properties;
 import cn.mzlalal.cachelog.cachelogcore.entity.enums.FormatTypeEnums;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -51,22 +52,21 @@ public class CachelogProperties {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         CachelogProperties that = (CachelogProperties) o;
         return formatTypeEnums == that.formatTypeEnums &&
                 Objects.equals(classPath, that.classPath) &&
-                Objects.equals(methodName, that.methodName);
+                Objects.equals(methodName, that.methodName) &&
+                Arrays.equals(exceptionEntity, that.exceptionEntity);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(formatTypeEnums, classPath, methodName);
+        int result = Objects.hash(formatTypeEnums, classPath, methodName);
+        result = 31 * result + Arrays.hashCode(exceptionEntity);
+        return result;
     }
 
     public String getMethodName() {
@@ -84,9 +84,10 @@ public class CachelogProperties {
     @Override
     public String toString() {
         return "CachelogProperties{" +
-                "FormatTypeEnums=" + formatTypeEnums +
-                ", classPath='" + classPath + '\'' +
+                "formatTypeEnums=" + formatTypeEnums +
+                ", classPath=" + classPath +
                 ", methodName='" + methodName + '\'' +
+                ", exceptionEntity=" + Arrays.toString(exceptionEntity) +
                 '}';
     }
 }

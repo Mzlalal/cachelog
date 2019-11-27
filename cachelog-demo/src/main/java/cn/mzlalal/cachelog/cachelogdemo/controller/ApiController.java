@@ -16,7 +16,7 @@ import java.io.IOException;
  * @version: 1.0
  */
 @Slf4j
-@Cachelog(isRedis = true)
+@Cachelog(moduleName = "测试服务")
 @RestController
 @RequestMapping("test")
 public class ApiController {
@@ -26,7 +26,7 @@ public class ApiController {
      * @return
      */
     @RequestMapping("testAnnotation")
-    @Cachelog(isLog = false)
+    @Cachelog(isLog = true, functionName = "查找")
     public Results find () {
         return Results.OK("不会记录日志");
     }

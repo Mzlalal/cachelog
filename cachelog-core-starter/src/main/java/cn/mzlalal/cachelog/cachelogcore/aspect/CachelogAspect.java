@@ -9,6 +9,7 @@ import cn.mzlalal.cachelog.cachelogcore.interfaces.CacheLogFormatTypeInterface;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -87,13 +88,25 @@ public class CachelogAspect {
             args = JSON.toJSONString(request.getParameterMap());
             cacheLog.setRemoteIP(request.getRemoteAddr());
         }
+        // 从目标类上获取注解
+        annotation = pjp.getTarget().getClass().getAnnotation(Cachelog.class);
+        // 获取模块名称
+        if(StringUtils.isNotBlank(annotation.moduleName())) {
+            cacheLog.setModuleName(annotation.moduleName());
+        }
         // 获取方法注解信息
-        annotation = method.getAnnotation(Cachelog.class);
         // 如果从方法上获取注解位空 则获取类上面的注解
-        if (Objects.isNull(annotation)) {
+        if (Objects.nonNull(method.getAnnotation(Cachelog.class))) {
             // 从目标类上获取注解
-            annotation = pjp.getTarget().getClass().getAnnotation(Cachelog.class);
-            Assert.notNull(annotation, "注解对象Cachelog不能为空!");
+            annotation = method.getAnnotation(Cachelog.class);
+        }
+        // 获取功能名称
+        if(StringUtils.isNotBlank(annotation.functionName())) {
+            // 如果方法上还有moduleName 则优先使用方法上的
+            if (StringUtils.isNotBlank(annotation.moduleName())) {
+                cacheLog.setModuleName(annotation.moduleName());
+            }
+            cacheLog.setFunctionName(annotation.functionName());
         }
         // 获取类名
         cacheLog.setClassName(clazz.toString());

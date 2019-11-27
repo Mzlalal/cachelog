@@ -29,6 +29,14 @@ public class CacheLog {
      */
     private String remoteIP;
     /**
+     * 模块名称 建议在类上使用 当前这个类是那个服务模块
+     */
+    private String moduleName;
+    /**
+     * 功能名称 建议在方法上使用 当前这个方法是为前端那个功能服务
+     */
+    private String functionName;
+    /**
      * 请求参数
      */
     private String requestParameter;
@@ -48,19 +56,4 @@ public class CacheLog {
      * 结束时间
      */
     private Date endTimestamp;
-
-    @Override
-    public String toString() {
-        return "CacheLog{" +
-                "operationType='" + operationType + '\'' +
-                ", className='" + className + '\'' +
-                ", methodName='" + methodName + '\'' +
-                ", remoteIP='" + remoteIP + '\'' +
-                ", requestParameter='" + requestParameter + '\'' +
-                ", returnValue='" + returnValue + '\'' +
-                ", totalConsumerTime=" + totalConsumerTime +
-                ", startTimestamp=" + startTimestamp.toLocaleString() +
-                ", endTimestamp=" + startTimestamp.toLocaleString() +
-                '}';
-    }
 }

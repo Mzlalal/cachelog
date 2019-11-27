@@ -43,4 +43,13 @@ public @interface Cachelog {
      * 返回错误的实体, 如果使用该实体 则不会保存到redis
      */
     Class exceptionEntity() default Throwable.class;
+
+    /**
+     * 当前类模块名称 例如用户服务
+     */
+    String moduleName() default "";
+    /**
+     * 当前方法为当前模块哪个功能
+     */
+    String functionName() default "";
 }
