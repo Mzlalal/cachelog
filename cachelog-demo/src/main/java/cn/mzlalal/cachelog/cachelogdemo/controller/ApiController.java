@@ -1,8 +1,8 @@
 package cn.mzlalal.cachelog.cachelogdemo.controller;
 
 import cn.mzlalal.cachelog.cachelogcore.annotaion.Cachelog;
+import cn.mzlalal.cachelog.cachelogdemo.entity.ExceptionResults;
 import cn.mzlalal.cachelog.cachelogdemo.entity.Results;
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,11 +49,10 @@ public class ApiController {
     @RequestMapping("testAnnotation3")
     public Results list (String arg1, String args2) {
         try {
-            throw new IOException(JSON.toJSONString(Results.FAIL("查询失败")));
+            throw new IOException("查询失败");
         } catch (IOException e) {
             log.error("查询失败!", e);
-            return Results.FAIL("查询失败");
-//            throw new RuntimeException(JSON.toJSONString(Results.FAIL("查询失败")), e);
+            return ExceptionResults.FAIL("查询失败", e);
         }
     }
 }

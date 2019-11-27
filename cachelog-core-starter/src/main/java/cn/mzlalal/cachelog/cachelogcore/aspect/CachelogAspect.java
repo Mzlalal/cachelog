@@ -23,6 +23,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
@@ -113,14 +114,14 @@ public class CachelogAspect {
             if (Objects.isNull(temp)) {
                 returnValue = pjp.proceed();
             } else {
-                // 将返回类型反序列化
+                // 将返回结果从缓存中反序列化
                 try {
                     returnValue = JSON.parseObject(temp.toString(), returnClazz);
                 } catch (Exception e) {
                     log.error("", e);
                     // 删除redis键
                     redisTemplate.delete(keyName);
-                    // 进行重试
+                    // 反序列化报错后进行重试 可能进行了返回结果类型的更改
                     returnValue = pjp.proceed();
                 }
             }
@@ -137,6 +138,10 @@ public class CachelogAspect {
             cacheLog.setReturnValue(JSON.toJSONString(returnValue));
             if (log.isDebugEnabled()) {
                 log.debug("方法:{} 总耗时:{}", cacheLog.getMethodName(), cacheLog.getTotalConsumerTime());
+            }
+            // 判断是否是 异常实体类
+            if (isExceptionEntityInstance(returnValue, annotation)) {
+                return returnValue;
             }
         }
         // 判断是否存储到redis 使用字符串String 类名方法名称为key 返回值为value
@@ -191,7 +196,7 @@ public class CachelogAspect {
                 Assert.notNull(cachelogProperties.getMethodName(), "自定义方法名称不能为空！");
                 try {
                     // 根据指定的类路径查询
-                    Class clazz = Class.forName(cachelogProperties.getClassPath());
+                    Class clazz = cachelogProperties.getClassPath();
                     // 实例化指定的类
                     Object instanceObj = clazz.newInstance();
                     // 判断是否是CacheLogFormatTypeInterface的实现类
@@ -206,7 +211,7 @@ public class CachelogAspect {
                             return;
                         }
                     }
-                } catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+                } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
                     log.error("自定义格式化日志出现了问题!", e);
                 }
                 break;
@@ -253,5 +258,18 @@ public class CachelogAspect {
             default:
                 return annotation.time();
         }
+    }
+
+    /**
+     * 是否是错误实体类的实例
+     *
+     * @param returnValue 返回值
+     * @param cachelog    注解
+     * @return
+     */
+    private boolean isExceptionEntityInstance(Object returnValue, Cachelog cachelog) {
+        // 遍历数组
+        return Arrays.stream(cachelogProperties.getExceptionEntity()).anyMatch(c -> c.isInstance(returnValue))
+                || cachelog.exceptionEntity().isInstance(returnValue);
     }
 }

@@ -3,6 +3,7 @@ package cn.mzlalal.cachelog.cachelogdemo;
 import cn.mzlalal.cachelog.cachelogcore.entity.enums.ExpiredPolicyEnums;
 import cn.mzlalal.cachelog.cachelogcore.entity.enums.MethodHeadEnums;
 import cn.mzlalal.cachelog.cachelogcore.interfaces.CacheLogFormatTypeInterface;
+import cn.mzlalal.cachelog.cachelogdemo.entity.ExceptionResults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -55,5 +56,17 @@ public class CachelogDemoApplicationTests {
 		String a = ExpiredPolicyEnums.DEFAULT.toString();
 		String b = ExpiredPolicyEnums.DEFAULT.toString();
 		System.out.println(StringUtils.equals(a, b));
+	}
+
+	@Test
+	public void isInstance2 () {
+		try {
+			Class[] clazz = {Class.forName("cn.mzlalal.cachelog.cachelogdemo.entity.ExceptionResults")};
+			ExceptionResults exceptionResults = new ExceptionResults();
+			boolean flag = Arrays.stream(clazz).anyMatch(c -> c.isInstance(exceptionResults));
+			System.out.println(flag);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

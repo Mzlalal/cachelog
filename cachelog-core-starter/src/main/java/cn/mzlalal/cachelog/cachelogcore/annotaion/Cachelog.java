@@ -39,4 +39,8 @@ public @interface Cachelog {
      * 时间单位
      */
     TimeUnit unit() default TimeUnit.SECONDS;
+    /**
+     * 返回错误的实体, 如果使用该实体 则不会保存到redis
+     */
+    Class exceptionEntity() default Throwable.class;
 }

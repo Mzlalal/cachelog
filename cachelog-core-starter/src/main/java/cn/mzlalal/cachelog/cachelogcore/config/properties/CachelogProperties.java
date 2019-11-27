@@ -21,12 +21,17 @@ public class CachelogProperties {
     /**
      * 类路径
      */
-    private String classPath;
+    private Class classPath;
 
     /**
      * 方法名称
      */
     private String methodName = "formatLog";
+
+    /**
+     * 类路径
+     */
+    private Class[] exceptionEntity;
 
     public FormatTypeEnums getFormatTypeEnums() {
         return formatTypeEnums;
@@ -36,11 +41,11 @@ public class CachelogProperties {
         this.formatTypeEnums = formatType;
     }
 
-    public String getClassPath() {
+    public Class getClassPath() {
         return classPath;
     }
 
-    public void setClassPath(String classPath) {
+    public void setClassPath(Class classPath) {
         this.classPath = classPath;
     }
 
@@ -64,6 +69,18 @@ public class CachelogProperties {
         return Objects.hash(formatTypeEnums, classPath, methodName);
     }
 
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public Class[] getExceptionEntity() {
+        return exceptionEntity;
+    }
+
+    public void setExceptionEntity(Class[] exceptionEntity) {
+        this.exceptionEntity = exceptionEntity;
+    }
+
     @Override
     public String toString() {
         return "CachelogProperties{" +
@@ -71,9 +88,5 @@ public class CachelogProperties {
                 ", classPath='" + classPath + '\'' +
                 ", methodName='" + methodName + '\'' +
                 '}';
-    }
-
-    public String getMethodName() {
-        return methodName;
     }
 }
