@@ -28,9 +28,17 @@ public class ApiController {
     @RequestMapping("testAnnotation")
     @Cachelog(isLog = false)
     public Results find () {
-        return Results.OK("测试");
+        return Results.OK("不会记录日志");
     }
 
+    /**
+     * 不会记录操作日志类型
+     * @return
+     */
+    @RequestMapping("testAnnotationX")
+    public Results fxind () {
+        return Results.OK("不会记录操作类型");
+    }
 
     /**
      * 这个不会保存到redis
@@ -39,7 +47,7 @@ public class ApiController {
     @RequestMapping("testAnnotation2")
     @Cachelog
     public Results save () {
-        return Results.OK("新增");
+        return Results.OK("这个不会保存到redis");
     }
 
     /**

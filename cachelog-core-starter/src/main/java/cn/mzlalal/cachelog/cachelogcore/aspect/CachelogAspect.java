@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Optional;
 
 
 /**
@@ -62,7 +63,7 @@ public class CachelogAspect {
      * 环绕通知
      *
      * @param pjp 切入点
-     * @return
+     * @return 返回结果
      */
     @Around("classPointCut() || methodPointCut()")
     public Object doAround(ProceedingJoinPoint pjp) {
@@ -76,15 +77,14 @@ public class CachelogAspect {
         Class returnClazz = method.getReturnType();
         // 获取请求对象
         HttpServletRequest request = this.getRequest();
-        // 获取方法参数
-        String args = JSON.toJSONString(request.getParameterMap());
-
         // 实例化对象
         CacheLog cacheLog = new CacheLog();
         // 设置方法开始时间
         cacheLog.setStartTimestamp(new Date());
-        // 获取调用方IP
+        // 获取调用方IP 获取方法参数
+        String args = null;
         if (request != null) {
+            args = JSON.toJSONString(request.getParameterMap());
             cacheLog.setRemoteIP(request.getRemoteAddr());
         }
         // 获取方法注解信息
@@ -139,6 +139,10 @@ public class CachelogAspect {
             if (log.isDebugEnabled()) {
                 log.debug("方法:{} 总耗时:{}", cacheLog.getMethodName(), cacheLog.getTotalConsumerTime());
             }
+            // 判断是否记录日志
+            if (annotation.isLog()) {
+                this.printLog(cacheLog);
+            }
             // 判断是否是 异常实体类
             if (isExceptionEntityInstance(returnValue, annotation)) {
                 return returnValue;
@@ -157,17 +161,13 @@ public class CachelogAspect {
                     this.getExpiredTime(annotation),
                     annotation.unit());
         }
-        // 判断是否记录日志
-        if (annotation.isLog()) {
-            this.printLog(cacheLog);
-        }
         return returnValue;
     }
 
     /**
      * 获取 request 对象
      *
-     * @return
+     * @return HttpServletRequest
      */
     private HttpServletRequest getRequest() {
         ServletRequestAttributes sra = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -205,8 +205,8 @@ public class CachelogAspect {
                     Method[] methods = clazz.getDeclaredMethods();
                     for (Method temp : methods) {
                         if (temp.getName().equals(cachelogProperties.getMethodName())) {
-                            Object returnValue = temp.invoke(instanceObj, cacheLog);
-                            log.info(returnValue.toString());
+                            Object customizationReturnValue = temp.invoke(instanceObj, cacheLog);
+                            log.info(customizationReturnValue.toString());
                             // 退出执行
                             return;
                         }
@@ -235,12 +235,9 @@ public class CachelogAspect {
      * @return string 若未查询到返回 未知
      */
     private String getOperationType(String methodName) {
-        for (MethodHeadEnums temp : MethodHeadEnums.values()) {
-            if (methodName.startsWith(temp.getHead())) {
-                return temp.getType();
-            }
-        }
-        return "未知";
+        Optional<MethodHeadEnums> temp = Arrays.stream(MethodHeadEnums.values())
+                .filter(enums -> methodName.startsWith(enums.getHead())).findAny();
+        return temp.isPresent() ? temp.get().getType() : "未知";
     }
 
     /**
@@ -268,8 +265,11 @@ public class CachelogAspect {
      * @return
      */
     private boolean isExceptionEntityInstance(Object returnValue, Cachelog cachelog) {
-        // 遍历数组
-        return Arrays.stream(cachelogProperties.getExceptionEntity()).anyMatch(c -> c.isInstance(returnValue))
-                || cachelog.exceptionEntity().isInstance(returnValue);
+        if (Objects.nonNull(cachelogProperties.getExceptionEntity())) {
+            // 遍历数组
+            return Arrays.stream(cachelogProperties.getExceptionEntity()).anyMatch(c -> c.isInstance(returnValue))
+                    || cachelog.exceptionEntity().isInstance(returnValue);
+        }
+        return cachelog.exceptionEntity().isInstance(returnValue);
     }
 }
