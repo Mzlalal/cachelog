@@ -131,7 +131,7 @@ public class CachelogAspect {
                 try {
                     returnValue = JSON.parseObject(temp.toString(), returnClazz);
                 } catch (Exception e) {
-                    log.error("", e);
+                    log.error(keyName+"从缓存中反序列化失败!", e);
                     // 删除redis键
                     redisTemplate.delete(keyName);
                     // 反序列化报错后进行重试 可能进行了返回结果类型的更改
